@@ -64,9 +64,8 @@ class ConnectWidget(QtWidgets.QWidget):
 
         self.lineEdit = QtWidgets.QLineEdit(parent=self)
         self.lineEdit.setGeometry(QtCore.QRect(140, 220, 171, 25))
-        self.lineEdit.setInputMask('000. 000. 000. 000: 0000;0')
-        # self.lineEdit.setFocusPolicy(0)
-        # self.lineEdit.setFocusProxy(0)
+        # self.lineEdit.setInputMask('000. 000. 000. 000: 0000;0')
+        self.lineEdit.setPlaceholderText('127.0.0.1:9393')
         self.lineEdit.setTextMargins(3,2,3,2)
         self.lineEdit.setFont(font)
         self.lineEdit.setFocus()
@@ -143,8 +142,6 @@ class UpLoadWidget(QtWidgets.QWidget):
         self.setObjectName('uploadwidget')
         self.parent_father=parent_father
         self.databasewidget = DatabaseWidget(self,object_name='table_upload_0', download_or_upload='上传')
-        self.databasewidget.update_data([r'C:\Users\Lenovo\Desktop\photo\arknight\0.jpg',
-                          r'C:\Users\Lenovo\Desktop\photo\arknight\20211203_140134.jpg'])
 
         self.btn_choosefile = QtWidgets.QPushButton(text='选择文件', parent=self)
         self.btn_choosefile.setObjectName(u"btn_choosefile_0")

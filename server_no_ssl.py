@@ -1,8 +1,9 @@
 import socket
 import threading, struct, json, os, pymysql
 from glob import glob
+from argparse import ArgumentParser
 class Server():
-    def __init__(self,server_ip_port,server_default_path='D:/迅雷下载/'):
+    def __init__(self,server_ip_port,server_default_path=r'C:\Users\Public'):
         self.server_ip_port = server_ip_port
         self.server_default_path = server_default_path
         self.ip = server_ip_port[:-5]
@@ -102,6 +103,9 @@ class Server():
                 break
 
 if __name__ == "__main__":
-    # server=Server('192.168.1.105:9393')
-    server=Server('127.0.0.1:9393')
+    args=ArgumentParser()
+    args.add_argument('--root_dir','-rd',default=r'C:\Users\Public')
+    args.add_argument('--ip_port','-ip',default=r'127.0.0.1:9393')
+    opts=args.parse_args()
+    server=Server(opts.ip_port,opts.root_dir)
     server.listen()
