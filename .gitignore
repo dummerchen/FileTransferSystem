@@ -1,0 +1,6 @@
+temp.*
+temp/
+.idea
+UI/start_window.*
+*?/?__pycache__
+*.txt
