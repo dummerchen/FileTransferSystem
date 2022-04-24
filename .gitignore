@@ -2,5 +2,6 @@ temp.*
 temp/
 .idea
 UI/start_window.*
-*?/?__pycache__
+__pycache__
+UI/__pycache__
 *.txt
