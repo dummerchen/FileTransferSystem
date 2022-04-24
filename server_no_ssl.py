@@ -50,7 +50,7 @@ class Server():
                         connection.send(fhead)
 
                         for pth in filepaths:
-                            byte=struct.pack('1024s', bytes(json.dumps({'path':pth}).encode('utf-8')))
+                            byte=struct.pack('1024s', bytes(json.dumps({'path':pth,'size':os.stat(pth).st_size}).encode('utf-8')))
                             connection.send(byte)
 
                         print('server check over...')
@@ -71,12 +71,12 @@ class Server():
                                 recvd_size = file_size
                             file.write(rdata)
                         file.close()
-                        print('receive done')
 
                     if Command == 'Download':
                         # 查询数据表数据
-                        file_path=header['file_path']
+                        file_name=header['file_path']
                         # 定义文件头信息，包含文件名和文件大小
+                        file_path=os.path.join(self.server_default_path,file_name)
                         header = {
                             'Feedback': Command,
                             'stat': 'Success',

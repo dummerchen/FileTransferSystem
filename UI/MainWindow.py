@@ -8,18 +8,17 @@ import time
 
 from PySide6 import QtWidgets,QtCore,QtNetwork,QtGui
 from PySide6.QtCore import Slot,Qt
-from client_socket_no_ssl import Client
-
-
+from client_socket_no_ssl import Client,transfer_size
 # CHECKED 多线程上传、下载文件
 # CHECKED 多页面切换
 # CHECKED 多线程进度条显示
 # CHECKED 可同时选择多文件上传
 # CHECKED 可同时选择多文件上传
 # CHECKED 可显示服务器目录下的文件
+# CHECKED 页面是文件大小或文件路径 (都是文件名和文件路径会不会更好？
+
 # TODO about页面
-# TODO 高并发
-# TODO 下载页面应该使用文件大小而不是文件名 列
+# TODO 增加选择服务器路径 按钮
 
 class Main_Window(QtWidgets.QMainWindow):
     def __init__(self):
@@ -80,14 +79,14 @@ class ConnectWidget(QtWidgets.QWidget):
         server_ip_port=self.lineEdit.text().replace(' ','')
         print(server_ip_port)
 
-        req,server_allfile_paths=self.parent_father.client.check_server()
+        req,server_allfile_paths,server_allfile_sizes=self.parent_father.client.check_server()
         if req:
             # 连接成功，页面启动
             self.parent_father.tab_widget.setTabEnabled(1,True)
             self.parent_father.tab_widget.setTabEnabled(2,True)
             self.parent_father.tab_widget.setCurrentIndex(1)
             # 初始化下载页面，获取服务器文件并更新窗口
-            self.parent_father.downloadwidget.databasewidget.update_data(server_allfile_paths)
+            self.parent_father.downloadwidget.databasewidget.update_data(server_allfile_paths,server_allfile_sizes)
         else:
             self.parent_father.tab_widget.setTabEnabled(1,False)
             self.parent_father.tab_widget.setTabEnabled(2,False)
@@ -127,9 +126,9 @@ class DownloadWidget(QtWidgets.QWidget):
         elif len(index)==3:
             row=index[0].row()
             save_file_path,_=QtWidgets.QFileDialog.getSaveFileName(self,'保存文件')
-            file_path=self.databasewidget.table_database.item(row,1).text()
+            file_name=self.databasewidget.table_database.item(row,0).text()
             bar=self.databasewidget.table_database.cellWidget(row,2)
-            thread=Thread(self,file_path,bar,save_file_path,download_or_upload='download')
+            thread=Thread(self,file_name,bar,save_file_path,download_or_upload='download')
             thread.start()
         else:
             #TODO 设置批量下载，保存到一个文件夹
@@ -176,6 +175,7 @@ class UpLoadWidget(QtWidgets.QWidget):
             for i in index[1::3]:
                 row=i.row()
                 file_path = self.databasewidget.table_database.item(row, 1).text()
+
                 bar = self.databasewidget.table_database.cellWidget(row, 2)
                 thread = Thread(parent_father=self,file_path=file_path,bar=bar,download_or_upload='upload')
                 thread.start()
@@ -183,7 +183,6 @@ class UpLoadWidget(QtWidgets.QWidget):
     def choose_file(self):
         # 选择文件
         filename_paths,_=QtWidgets.QFileDialog.getOpenFileNames(self)
-        print(filename_paths)
         self.databasewidget.update_data(filename_paths)
 
 class DatabaseWidget(object):
@@ -219,17 +218,17 @@ class DatabaseWidget(object):
 
         tablewidget_item0 = QtWidgets.QTableWidgetItem()
         tablewidget_item0.setTextAlignment(Qt.AlignCenter)
-        # if download_or_upload=='download':
-        #     tablewidget_item0.setText('文件大小')
-        # else:
+
         tablewidget_item0.setText('文件名')
         tablewidget_item0.setFont(self.font)
-
         self.table_database.setHorizontalHeaderItem(0, tablewidget_item0)
 
         tablewidget_item1 = QtWidgets.QTableWidgetItem()
         tablewidget_item1.setTextAlignment(Qt.AlignCenter)
-        tablewidget_item1.setText('文件路径')
+        if download_or_upload=='下载':
+            tablewidget_item1.setText('文件大小')
+        else:
+            tablewidget_item1.setText('文件路径')
         tablewidget_item1.setFont(self.font)
         self.table_database.setHorizontalHeaderItem(1, tablewidget_item1)
 
@@ -239,18 +238,30 @@ class DatabaseWidget(object):
         tablewidget_item2.setFont(self.font)
         self.table_database.setHorizontalHeaderItem(2, tablewidget_item2)
 
-    def update_data(self,filename_paths):
+    def update_data(self,filename_paths,file_sizes=None):
         '''
         :param data:[name_path1,name_path2 ]
             主进程可选择多个文件上传，但是上传后要显示在download中页面需要子进程 update one data
         :return:
         '''
-        for pth in filename_paths:
-            self.update_onedata(pth)
+        for i,pth in enumerate(filename_paths):
 
+            items_list = self.parent_father.databasewidget.table_database.findItems(pth, Qt.MatchFlag.MatchExactly)
+            if file_sizes!=None:
+                self.update_onedata(pth,file_sizes[i])
+            else:
+                self.update_onedata(pth)
     @Slot(str)
-    def update_onedata(self,pth):
-
+    def update_onedata(self,pth,file_size=None):
+        items_list = self.parent_father.databasewidget.table_database.findItems(os.path.basename(pth), Qt.MatchFlag.MatchExactly)
+        if len(items_list) != 0:
+            box = QtWidgets.QMessageBox.warning(self.parent_father,'警告','文件名重复，是否覆盖文件',QtWidgets.QMessageBox.Save|QtWidgets.QMessageBox.Cancel,
+                               QtWidgets.QMessageBox.Save)
+            if box.Save:
+                # 确定重复名称覆盖
+                self.parent_father.databasewidget.table_database.removeRow(items_list[0].row())
+            else:
+                return
         last_row = self.table_database.rowCount()
         btn_progressbar = QtWidgets.QProgressBar()
         btn_progressbar.setMaximum(99)
@@ -258,7 +269,10 @@ class DatabaseWidget(object):
         name = os.path.basename(pth)
         self.table_database.insertRow(last_row)
         self.table_database.setItem(last_row, 0, QtWidgets.QTableWidgetItem(name))
-        self.table_database.setItem(last_row, 1, QtWidgets.QTableWidgetItem(pth))
+        if file_size!=None:
+            self.table_database.setItem(last_row, 1, QtWidgets.QTableWidgetItem(file_size))
+        else:
+            self.table_database.setItem(last_row, 1, QtWidgets.QTableWidgetItem(pth))
         self.table_database.setCellWidget(last_row, 2, btn_progressbar)
 
     def remove_data(self):
@@ -276,11 +290,12 @@ class DatabaseWidget(object):
 
 class Thread(QtCore.QThread):
     signal_progressbar=QtCore.Signal(int)
-    signal_databasewidget_update=QtCore.Signal(str)
+    signal_databasewidget_update=QtCore.Signal(str,str)
     def __init__(self,parent_father:QtWidgets.QWidget=None,file_path=None,bar=None,save_file_path=None,download_or_upload='download',debug_time_gap=0.1):
         QtCore.QThread.__init__(self,parent_father)
         self.parent_father=parent_father
         self.save_file_path=save_file_path
+        # 对于下载操作这是文件名，上传操作这是文件路径
         self.file_path=file_path
         self.bar=bar
         self.download_or_upload=download_or_upload
@@ -304,7 +319,7 @@ class Thread(QtCore.QThread):
         if self.download_or_upload == 'upload':
             self.signal_progressbar.emit(0)
             self.parent_father.parent_father.client.upload(self.file_path,self.signal_progressbar)
-            self.signal_databasewidget_update.emit(self.file_path)
+            self.signal_databasewidget_update.emit(self.file_path,transfer_size(os.stat(self.file_path).st_size))
 
 if __name__=='__main__':
     app = QtWidgets.QApplication(sys.argv)

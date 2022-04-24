@@ -1,6 +1,23 @@
 import socket
 import time,os,struct,json
 
+
+def transfer_size(size:int):
+    if size>1024:
+        size/=1024
+    else:
+        return str(round(size,2))+' b'
+    if size>1024:
+        size/=1024
+    else:
+        return str(round(size,2))+' KB'
+    if size>1024:
+        size/=1024
+    else:
+        return str(round(size,2))+' MB'
+
+    return str(round(size,2))+' GB'
+
 class Client():
     def __init__(self,server_ip_port='127.0.0.1:9393'):
 
@@ -38,19 +55,20 @@ class Client():
                 print('Client Check Success')
                 recvd_size=0
                 allfile_pths=[]
-                # tempinfo = struct.calcsize('1024s')
+                allfile_sizes=[]
 
                 while not recvd_size == fileSize:
                     temp = self.ssock.recv(1024)
                     recvd_size += 1
                     path=json.loads(str(struct.unpack('1024s',temp)[0],encoding='utf-8').strip('\00'))
                     allfile_pths.append(path['path'])
+                    allfile_sizes.append(transfer_size(path['size']))
 
-                return True,allfile_pths
-            return False,[]
+                return True,allfile_pths,allfile_sizes
+            return False,[],[]
         except Exception as e:
             print(e)
-            return False,e
+            return False,e,[]
 
     def upload(self,file_path,singal_progressbar):
         try:
@@ -78,7 +96,7 @@ class Client():
                 already_uploadsize+=len(filedata)
                 singal_progressbar.emit(already_uploadsize/file_size*100)
             fo.close()
-            # self.ssock.close()
+
         except Exception as e:
             print(e)
             return False
