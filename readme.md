@@ -16,12 +16,14 @@ cd FileTransferSystem
 
 ```bash
 mkdir Download
-python server.py -rd ./Download -ip 127.0.0.1:9
+python server.py -rd ./Download -ip 127.0.0.1:9393
 ```
 
 
 
 #### 运行客户端
+
+服务端启动后即可运行客户端。
 
 ```bash
 python main.py
