@@ -1,6 +1,8 @@
 import socket
 import time,os,struct,json
 
+import PySide6
+
 
 def transfer_size(size:int):
     if size>1024:
@@ -140,4 +142,4 @@ class Client():
                 return False
 
 if __name__ == "__main__":
-    client = Client()
+    c=Client()

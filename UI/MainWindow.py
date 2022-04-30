@@ -6,6 +6,7 @@ import os
 import sys
 import time
 
+import PySide6
 from PySide6 import QtWidgets,QtCore,QtNetwork,QtGui
 from PySide6.QtCore import Slot,Qt
 from client_socket_no_ssl import Client,transfer_size
@@ -166,7 +167,7 @@ class UpLoadWidget(QtWidgets.QWidget):
         if len(index)==0:
             QtWidgets.QMessageBox.warning(self,'警告','请点击需要上传的文件')
             pass
-        else:
+        elif len(index) == 3:
             # self.btn_del.setEnabled(False)
             # 选取第文件路径
             for i in index[1::3]:
@@ -176,7 +177,10 @@ class UpLoadWidget(QtWidgets.QWidget):
                 bar = self.databasewidget.table_database.cellWidget(row, 2)
                 thread = Thread(parent_father=self,file_path=file_path,bar=bar,download_or_upload='upload')
                 thread.start()
-
+        else:
+            #TODO 设置批量下载，保存到一个文件夹
+            QtWidgets.QMessageBox.warning(self,'警告','每次只能同时选择一个文件上传')
+            pass
     def choose_file(self):
         # 选择文件
         filename_paths,_=QtWidgets.QFileDialog.getOpenFileNames(self)
@@ -242,13 +246,11 @@ class DatabaseWidget(object):
         :return:
         '''
         for i,pth in enumerate(filename_paths):
-
-            items_list = self.parent_father.databasewidget.table_database.findItems(pth, Qt.MatchFlag.MatchExactly)
             if file_sizes!=None:
                 self.update_onedata(pth,file_sizes[i])
             else:
                 self.update_onedata(pth)
-    @Slot(str)
+
     def update_onedata(self,pth,file_size=None):
         items_list = self.parent_father.databasewidget.table_database.findItems(os.path.basename(pth), Qt.MatchFlag.MatchExactly)
         if len(items_list) != 0:
@@ -319,8 +321,11 @@ class Thread(QtCore.QThread):
             self.signal_databasewidget_update.emit(self.file_path,transfer_size(os.stat(self.file_path).st_size))
 
 if __name__=='__main__':
-    app = QtWidgets.QApplication(sys.argv)
+    dirpath = os.path.dirname(PySide6.__file__)
+    plugin_path = os.path.join(dirpath, 'plugin', 'platform')
+    os.environ['QT_QPA_PLUGIN_PLATFORM_PATH'] = plugin_path
 
+    app = QtWidgets.QApplication(sys.argv)
     window=Main_Window()
     window.show()
     sys.exit(app.exec())
