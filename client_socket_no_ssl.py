@@ -30,7 +30,10 @@ class Client():
         self.port = int(server_ip_port[-4:])
         self.req = False
 
-    def check_server(self):
+    def check_server(self,server_ip_port):
+        self.server_ip_port =server_ip_port
+        self.ip = server_ip_port[:-5]
+        self.port = int(server_ip_port[-4:])
         try:
             # 与服务器进行连接
             self.ssock = socket.create_connection((self.ip,self.port))

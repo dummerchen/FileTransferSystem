@@ -108,7 +108,7 @@ class Server():
 if __name__ == "__main__":
     args=ArgumentParser()
     args.add_argument('--root_dir','-rd',default=r'./download')
-    args.add_argument('--ip_port','-ip',default=r'127.0.0.1:9393')
+    args.add_argument('--ip_port','-ip',default=r'127.0.0.1:9394')
     opts=args.parse_args()
     if not os.path.exists(opts.root_dir):
         os.mkdir(opts.root_dir)

@@ -79,7 +79,7 @@ class ConnectWidget(QtWidgets.QWidget):
         server_ip_port=self.lineEdit.text().replace(' ','')
         print(server_ip_port)
 
-        req,server_allfile_paths,server_allfile_sizes=self.parent_father.client.check_server()
+        req,server_allfile_paths,server_allfile_sizes=self.parent_father.client.check_server(server_ip_port)
         if req:
             # 连接成功，页面启动
             self.parent_father.tab_widget.setTabEnabled(1,True)
