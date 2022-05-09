@@ -31,9 +31,10 @@ class Client():
         self.req = False
 
     def check_server(self,server_ip_port):
-        self.server_ip_port =server_ip_port
-        self.ip = server_ip_port[:-5]
-        self.port = int(server_ip_port[-4:])
+        if server_ip_port!='':
+            self.server_ip_port =server_ip_port
+            self.ip = server_ip_port[:-5]
+            self.port = int(server_ip_port[-4:])
         try:
             # 与服务器进行连接
             self.ssock = socket.create_connection((self.ip,self.port))
@@ -68,8 +69,9 @@ class Client():
                     path=json.loads(str(struct.unpack('1024s',temp)[0],encoding='utf-8').strip('\00'))
                     allfile_pths.append(path['path'])
                     allfile_sizes.append(transfer_size(path['size']))
-
+                self.ssock.close()
                 return True,allfile_pths,allfile_sizes
+
             return False,[],[]
         except Exception as e:
             print(e)
@@ -77,6 +79,7 @@ class Client():
 
     def upload(self,file_path,singal_progressbar):
         try:
+            self.ssock = socket.create_connection((self.ip, self.port))
             # 定义文件头信息，包含文件名和文件大小
             # ssock = socket.create_connection((self.ip, self.port))
             file_size=os.stat(file_path).st_size
@@ -101,12 +104,13 @@ class Client():
                 already_uploadsize+=len(filedata)
                 singal_progressbar.emit(already_uploadsize/file_size*100)
             fo.close()
-
+            self.ssock.close()
         except Exception as e:
             print(e)
             return False
 
     def download(self, file_path ,singal_progressbar,save_file_path):
+        self.ssock = socket.create_connection((self.ip, self.port))
         # 定义文件头信息，包含文件名和文件大小
         header = {
             'Command': 'Download',
@@ -140,6 +144,8 @@ class Client():
                     singal_progressbar.emit(recvd_size/fileSize*100)
                     file.write(rdata)
                 file.close()
+
+                # self.ssock.close()
                 return True
             else:
                 return False

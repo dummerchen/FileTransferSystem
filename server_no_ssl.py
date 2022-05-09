@@ -13,17 +13,17 @@ class Server():
     def listen(self):
         # 监听端口
         print('server start')
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as ssock:
-            ssock.bind((self.ip,self.port))
-            ssock.listen(5)
+        ssock= socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        ssock.bind((self.ip,self.port))
+        ssock.listen(5)
 
-            while True:
-                # 接收客户端连接
-                connection, addr = ssock.accept()
-                print('Connected by ', addr)
-                #开启多线程,这里arg后面一定要跟逗号，否则报错
-                thread = threading.Thread(target=self.conn_thread, args=(connection,))
-                thread.start()
+        while True:
+            # 接收客户端连接
+            connection, addr = ssock.accept()
+            print('Connected by ', addr)
+            #开启多线程,这里arg后面一定要跟逗号，否则报错
+            thread = threading.Thread(target=self.conn_thread, args=(connection,))
+            thread.start()
 
     def conn_thread(self,connection):
         while True:
@@ -53,7 +53,6 @@ class Server():
                         for pth in filepaths:
                             byte=struct.pack('1024s', bytes(json.dumps({'path':pth,'size':os.stat(pth).st_size}).encode('utf-8')))
                             connection.send(byte)
-
                         print('server check over...')
 
                     if Command == 'Upload' :
@@ -95,20 +94,25 @@ class Server():
                             connection.send(filedata)
                         fo.close()
 
+                connection.close()
+                break
             except socket.timeout:
                 connection.close()
+                print('time out')
                 break
             except ConnectionResetError:
+                print('reset error')
                 connection.close()
+                pass
                 break
             except Exception as e:
-                connection.close()
-                print(e)
+                print('server ???',e)
+                break
 
 if __name__ == "__main__":
     args=ArgumentParser()
     args.add_argument('--root_dir','-rd',default=r'./download')
-    args.add_argument('--ip_port','-ip',default=r'127.0.0.1:9394')
+    args.add_argument('--ip_port','-ip',default=r'127.0.0.1:9393')
     opts=args.parse_args()
     if not os.path.exists(opts.root_dir):
         os.mkdir(opts.root_dir)

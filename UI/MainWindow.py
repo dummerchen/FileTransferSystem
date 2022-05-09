@@ -173,7 +173,6 @@ class UpLoadWidget(QtWidgets.QWidget):
             for i in index[1::3]:
                 row=i.row()
                 file_path = self.databasewidget.table_database.item(row, 1).text()
-
                 bar = self.databasewidget.table_database.cellWidget(row, 2)
                 thread = Thread(parent_father=self,file_path=file_path,bar=bar,download_or_upload='upload')
                 thread.start()
@@ -252,18 +251,19 @@ class DatabaseWidget(object):
                 self.update_onedata(pth)
 
     def update_onedata(self,pth,file_size=None):
-        items_list = self.parent_father.databasewidget.table_database.findItems(os.path.basename(pth), Qt.MatchFlag.MatchExactly)
+        items_list = self.table_database.findItems(os.path.basename(pth), Qt.MatchFlag.MatchExactly)
         if len(items_list) != 0:
             box = QtWidgets.QMessageBox.warning(self.parent_father,'警告','文件名重复，是否覆盖文件',QtWidgets.QMessageBox.Save|QtWidgets.QMessageBox.Cancel,
                                QtWidgets.QMessageBox.Save)
             if box.Save:
                 # 确定重复名称覆盖
-                self.parent_father.databasewidget.table_database.removeRow(items_list[0].row())
+                self.table_database.removeRow(items_list[0].row())
             else:
                 return
         last_row = self.table_database.rowCount()
+        # last_row = self.parent_father.databasewidget.table_database.rowCount()
         btn_progressbar = QtWidgets.QProgressBar()
-        btn_progressbar.setMaximum(99)
+        btn_progressbar.setMaximum(100)
         btn_progressbar.setValue(0)
         name = os.path.basename(pth)
         self.table_database.insertRow(last_row)
