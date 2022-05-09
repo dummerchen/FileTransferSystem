@@ -1,10 +1,11 @@
 ## 使用步骤
 
-#### clone 仓库
+#### clone 仓库并安装依赖
 
 ```bash
 git clone https://github.com/dummerchen/FileTransferSystem.git
 cd FileTransferSystem
+pip install -r requirement
 ```
 
 #### 运行服务端
