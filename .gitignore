@@ -4,4 +4,3 @@ temp/
 UI/start_window.*
 __pycache__
 UI/__pycache__
-*.txt

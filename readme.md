@@ -11,7 +11,7 @@ cd FileTransferSystem
 
 可以增加服务端文件夹参数
 
-* root_dir:  -rd 服务器默认文件夹路径 ，默认 'C:/User/Pulic'
+* root_dir:  -rd 服务器默认文件夹路径 ，默认 './download'
 * ip_port : -ip 服务器启动ip和端口号，默认 '127.0.0.1:9393'
 
 ```bash
